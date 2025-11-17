@@ -6,31 +6,40 @@ import (
 	"errors"
 	"fmt"
 
-	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
-
+	gormpg "gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 var (
 	ErrOpenDB    = errors.New("failed to open database")
 	ErrMigration = errors.New("failed to run migrations")
+	ErrGormOpen  = errors.New("failed to gorm open")
 )
 
-type Storage struct {
-	db *sql.DB
+type PostgresStorage struct {
+	db *gorm.DB
 }
 
-func New(cfg Config) (*Storage, error) {
+func New(cfg Config) (*PostgresStorage, error) {
 	const op = "storage.postgres.NewStrorage"
 
-	db, err := sql.Open("postgres", cfg.DSN)
+	sqlDB, err := sql.Open("postgres", cfg.DSN)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w: %w", op, ErrOpenDB, err)
 	}
 
-	if err := goose.Up(db, "internal/infrastructure/storage/postgres/migrations"); err != nil {
+	if err := goose.Up(sqlDB, cfg.MigrationsPath); err != nil {
 		return nil, fmt.Errorf("%s: %w: %w", op, ErrMigration, err)
 	}
 
-	return &Storage{db: db}, nil
+	gormDB, err := gorm.Open(gormpg.New(gormpg.Config{
+		Conn: sqlDB,
+	}), &gorm.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w: %w", op, ErrGormOpen, err)
+	}
+
+	return &PostgresStorage{db: gormDB}, nil
 }
+

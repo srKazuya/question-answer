@@ -37,18 +37,18 @@ func main() {
 			cfg.DataBase.Dbname,
 			cfg.DataBase.Sslmode,
 		),
+		MigrationsPath: "internal/infrastructure/storage/postgres/migrations",
 	}
 
 	storage, err := postgres.New(pgConfig)
 	if err != nil {
 		log.Error("failed to init storage", sl.Err(err))
 	}
+	
 	_ = storage
 
 	// service := app.NewService(storage)
 	mux := http.NewServeMux()
-
-
 
 	srv := &http.Server{
 		Addr:         cfg.Address,

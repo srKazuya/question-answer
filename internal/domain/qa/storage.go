@@ -1,4 +1,4 @@
-package questionanswer
+package qa
 
 type Storage interface {
     // Questions
