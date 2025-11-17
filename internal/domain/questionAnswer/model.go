@@ -1,5 +1,5 @@
 // Package questionAnswer provides domain models for questions and answers.
-package questionAnswer
+package questionanswer
 
 import "time"
 

@@ -1,4 +1,4 @@
-package questionAnswer
+package questionanswer
 
 type Storage interface {
     // Questions
