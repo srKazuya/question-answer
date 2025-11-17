@@ -40,11 +40,12 @@ func main() {
 		MigrationsPath: "internal/infrastructure/storage/postgres/migrations",
 	}
 
+	log.Info("adas,", slog.String("Trying to connect with DSN", pgConfig.DSN))
 	storage, err := postgres.New(pgConfig)
 	if err != nil {
 		log.Error("failed to init storage", sl.Err(err))
 	}
-	
+
 	_ = storage
 
 	// service := app.NewService(storage)

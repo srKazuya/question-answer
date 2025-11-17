@@ -1,9 +1,6 @@
-version: "3.8"
-
 services:
-  postgres:
+  qa_postgres:
     image: postgres:15
-    container_name: qa_postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -12,17 +9,21 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 5
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: qa_app
     depends_on:
-      - postgres
+      qa_postgres:
+        condition: service_healthy
     environment:
       CONFIG_PATH: /app/config/dev.yaml
-      DATABASE_DSN: "postgres://postgres:postgres@postgres:5432/questions?sslmode=disable"
     ports:
       - "8082:8082"
 

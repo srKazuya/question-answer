@@ -8,6 +8,7 @@ import (
 
 	"github.com/pressly/goose/v3"
 	gormpg "gorm.io/driver/postgres"
+	_ "github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
