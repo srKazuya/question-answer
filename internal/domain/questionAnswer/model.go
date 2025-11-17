@@ -9,12 +9,6 @@ type Question struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type User struct {
-	ID           uint64 `json:"id"`
-	Username     string `json:"username" validate:"required,min=3,max=32"`
-	PasswordHash string `json:"-"`
-}
-
 type Answer struct {
 	ID         uint64    `json:"id"`
 	QuestionID uint64    `json:"question_id" validate:"required"`
