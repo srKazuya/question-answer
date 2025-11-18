@@ -3,12 +3,12 @@ package qa
 type Service interface {
     // Questions
     GetAllQuestions() ([]Question, error)
-    CreateQuestion(q *Question) (uint64, error)
+    CreateQuestion(q Question) (*Question, error)
     GetQuestionWithAnswers(id uint64) (*Question, []Answer, error)
     DeleteQuestion(id uint64) error
 
     // Answers
-    CreateAnswer(a *Answer) (uint64, error)
+    CreateAnswer(a Answer) (uint64, error)
     GetAnswer(id uint64) (*Answer, error)
     DeleteAnswer(id uint64) error
 }
@@ -25,7 +25,7 @@ func (s *service) GetAllQuestions() ([]Question, error) {
     return s.storage.GetAllQuestions()
 }
 
-func (s *service) CreateQuestion(q *Question) (uint64, error) {
+func (s *service) CreateQuestion(q Question) (*Question, error) {
     return s.storage.CreateQuestion(q)
 }
 
@@ -37,7 +37,7 @@ func (s *service) DeleteQuestion(id uint64) error {
     return s.storage.DeleteQuestion(id)
 }
 
-func (s *service) CreateAnswer(a *Answer) (uint64, error) {
+func (s *service) CreateAnswer(a Answer) (uint64, error) {
     return s.storage.CreateAnswer(a)
 }
 

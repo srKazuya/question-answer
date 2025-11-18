@@ -8,7 +8,11 @@ import (
 	"os"
 
 	"question-answer/internal/config"
+	"question-answer/internal/domain/qa"
+	"question-answer/internal/infrastructure/http/handlers"
+	"question-answer/internal/infrastructure/http/middleware"
 	"question-answer/internal/infrastructure/storage/postgres"
+
 	// "question-answer/internal/app"
 
 	"question-answer/pkg/sl_logger/sl"
@@ -48,8 +52,16 @@ func main() {
 
 	_ = storage
 
-	// service := app.NewService(storage)
+	service := qa.NewService(storage)
 	mux := http.NewServeMux()
+
+	mux.Handle("/questions",
+		middleware.NewMWLogger(log)(
+			middleware.RequestID(
+				http.HandlerFunc(handlers.NewAddQuestionHandler(log, service)),
+			),
+		),
+	)
 
 	srv := &http.Server{
 		Addr:         cfg.Address,

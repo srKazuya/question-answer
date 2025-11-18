@@ -71,16 +71,17 @@ func (s *PostgresStorage) GetAllQuestions() ([]qa.Question, error) {
 	return res, nil
 }
 
-func (s *PostgresStorage) CreateQuestion(q qa.Question) (uint64, error) {
+func (s *PostgresStorage) CreateQuestion(q qa.Question) (*qa.Question, error) {
 	const op = "storage.postgres.CreateQuestion"
 
 	dto := pgdto.ToDTOQuestion(q)
 
 	if err := s.db.Create(&dto).Error; err != nil {
-		return 0, fmt.Errorf("%s: %w: %w", op, ErrCreateQuestion, err)
+		return nil, fmt.Errorf("%s: %w: %w", op, ErrCreateQuestion, err)
 	}
 
-	return dto.ID, nil
+	domObj := pgdto.ToDomainQuestion(dto)
+	return &domObj, nil
 }
 
 func (s *PostgresStorage) GetQuestionWithAnswers(id uint64) (*qa.Question, []qa.Answer, error) {
