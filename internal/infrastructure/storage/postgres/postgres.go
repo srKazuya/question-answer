@@ -44,3 +44,4 @@ func New(cfg Config) (*PostgresStorage, error) {
 	return &PostgresStorage{db: gormDB}, nil
 }
 
+//TODO:добавить логику бд
