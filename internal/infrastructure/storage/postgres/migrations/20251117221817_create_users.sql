@@ -2,9 +2,11 @@
 -- +goose StatementBegin
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
-    text TEXT NOT NULL,
+    name TEXT NOT NULL,
     password_hash TEXT NOT NULL
 );
+INSERT INTO users (id, name, password_hash)
+VALUES (1, 'System', '');
 -- +goose StatementEnd
 
 -- +goose Down
