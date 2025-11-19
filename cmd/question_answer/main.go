@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 
 	"question-answer/internal/config"
 	"question-answer/internal/domain/qa"
@@ -44,7 +45,7 @@ func main() {
 		MigrationsPath: "internal/infrastructure/storage/postgres/migrations",
 	}
 
-	log.Info("adas,", slog.String("Trying to connect with DSN", pgConfig.DSN))
+	log.Info("CHECKING DB Conn,", slog.String("Trying to connect with DSN", pgConfig.DSN))
 	storage, err := postgres.New(pgConfig)
 	if err != nil {
 		log.Error("failed to init storage", sl.Err(err))
@@ -58,11 +59,42 @@ func main() {
 	mux.Handle("/questions",
 		middleware.NewMWLogger(log)(
 			middleware.RequestID(
-				http.HandlerFunc(handlers.NewAddQuestionHandler(log, service)),
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					switch r.Method {
+					case http.MethodGet:
+						handlers.NewGetQuestionHandler(log, service).ServeHTTP(w, r)
+					case http.MethodPost:
+						handlers.NewAddQuestionHandler(log, service).ServeHTTP(w, r)
+					default:
+						http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+					}
+				}),
 			),
 		),
 	)
 
+	mux.Handle("/questions/",
+		middleware.NewMWLogger(log)(
+			middleware.RequestID(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					idStr := strings.TrimPrefix(r.URL.Path, "/questions/")
+					if idStr == "" || idStr == "/" {
+						http.Error(w, "id required", http.StatusBadRequest)
+						return
+					}
+					if r.Method == http.MethodGet {
+						handlers.NewGetAllQuestionHandler(log, service, idStr).ServeHTTP(w, r)
+						return
+					}
+					if r.Method == http.MethodDelete{
+						handlers.NewDeleteQuestionHandler(log, service, idStr).ServeHTTP(w, r)
+						return
+					}
+					http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+				}),
+			),
+		),
+	)
 	srv := &http.Server{
 		Addr:         cfg.Address,
 		Handler:      mux,
