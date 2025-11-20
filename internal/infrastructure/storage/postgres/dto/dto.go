@@ -1,7 +1,7 @@
 package pgdto
 
 import (
-	"question-answer/internal/domain/auth"
+	"question-answer/internal/domain/users"
 	"question-answer/internal/domain/qa"
 	"time"
 )
