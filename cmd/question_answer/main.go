@@ -13,8 +13,6 @@ import (
 	mw "question-answer/internal/infrastructure/http/middleware"
 	"question-answer/internal/infrastructure/storage/postgres"
 
-	// "question-answer/internal/app"
-
 	"question-answer/pkg/sl_logger/sl"
 	"question-answer/pkg/sl_logger/slogpretty"
 
@@ -29,8 +27,6 @@ const (
 )
 
 func main() {
-	//entry point
-
 	cfg := config.MustLoad()
 	log := setupLogger(cfg.Env)
 	log = log.With(slog.String("env", cfg.Env))
@@ -77,7 +73,6 @@ func main() {
 				id := chi.URLParam(r, "questionID")
 				handlers.NewDeleteQuestionHandler(log, service, id).ServeHTTP(w, r)
 			})
-
 			r.Route("/answers", func(r chi.Router) {
 				r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 					questionID := chi.URLParam(r, "questionID")
@@ -86,46 +81,18 @@ func main() {
 			})
 		})
 	})
-
-	// mux.Handle("/questions",
-	// 	middleware.NewMWLogger(log)(
-	// 		middleware.RequestID(
-	// 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 				switch r.Method {
-	// 				case http.MethodGet:
-	// 					handlers.NewGetQuestionHandler(log, service).ServeHTTP(w, r)
-	// 				case http.MethodPost:
-	// 					handlers.NewAddQuestionHandler(log, service).ServeHTTP(w, r)
-	// 				default:
-	// 					http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-	// 				}
-	// 			}),
-	// 		),
-	// 	),
-	// )
-
-	// mux.Handle("/questions/",
-	// 	middleware.NewMWLogger(log)(
-	// 		middleware.RequestID(
-	// 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 				idStr := strings.TrimPrefix(r.URL.Path, "/questions/")
-	// 				if idStr == "" || idStr == "/" {
-	// 					http.Error(w, "id required", http.StatusBadRequest)
-	// 					return
-	// 				}
-	// 				if r.Method == http.MethodGet {
-	// 					handlers.NewGetAllQuestionHandler(log, service, idStr).ServeHTTP(w, r)
-	// 					return
-	// 				}
-	// 				if r.Method == http.MethodDelete {
-	// 					handlers.NewDeleteQuestionHandler(log, service, idStr).ServeHTTP(w, r)
-	// 					return
-	// 				}
-	// 				http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-	// 			}),
-	// 		),
-	// 	),
-	// )
+	r.Route("/answers", func(r chi.Router) {
+		r.Route("/{answerID}", func(r chi.Router) {
+			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+				questionID := chi.URLParam(r, "answerID")
+				handlers.NewGetAnswerHandler(log, service, questionID).ServeHTTP(w, r)
+			})
+			r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
+				questionID := chi.URLParam(r, "answerID")
+				handlers.NewDeleteAnswerHandler(log, service, questionID).ServeHTTP(w, r)
+			})
+		})
+	})
 
 	srv := &http.Server{
 		Addr:         cfg.Address,

@@ -16,7 +16,7 @@ import (
 	"strconv"
 )
 
-func NewAddAnswerHandler(log *slog.Logger, svc qa.Service, strId string) http.HandlerFunc {
+func NewAddAnswerHandler(log *slog.Logger, svc qa.Service, strID string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -29,12 +29,12 @@ func NewAddAnswerHandler(log *slog.Logger, svc qa.Service, strId string) http.Ha
 			slog.String("request_id", middleware.GetRequestID(r)),
 		)
 
-		questID, err := strconv.Atoi(strId)
+		questID, err := strconv.Atoi(strID)
 		if err != nil {
 			log.Error("failed to convert string",
 				sl.Err(err),
 			)
-			http.Error(w, "intreranl server error", http.StatusMethodNotAllowed)
+			http.Error(w, "intreranl server error", http.StatusInternalServerError)
 			return
 		}
 
@@ -58,7 +58,7 @@ func NewAddAnswerHandler(log *slog.Logger, svc qa.Service, strId string) http.Ha
 		}
 
 		reqAnswer := qa.Answer{
-			UserID: 1,
+			UserID:     1,
 			Text:       req.Text,
 			QuestionID: uint64(questID),
 		}
@@ -72,14 +72,87 @@ func NewAddAnswerHandler(log *slog.Logger, svc qa.Service, strId string) http.Ha
 			return
 		}
 
-		log.Info("quest added", slog.Any("title", reqAnswer.Text))
+		log.Info("answer added", slog.Any("title", reqAnswer.Text))
 
 		addAnswerResponseOK(w, answerID)
 	}
 }
-// func NewAddAnswerHandler(log *slog.Logger, svc qa.Service, strId string) http.HandlerFunc {
+func NewGetAnswerHandler(log *slog.Logger, svc qa.Service, strID string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		const op = "handlers.question.add"
+		log.With(
+			slog.String("op", op),
+			slog.String("request_id", middleware.GetRequestID(r)),
+		)
 
-// }
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			log.Error("mehthod not allowed")
+			return
+		}
+
+		answerID, err := strconv.Atoi(strID)
+		if err != nil {
+			log.Error("failde to convert string",
+				sl.Err(err),
+			)
+			http.Error(w, "internal server erro", http.StatusInternalServerError)
+			return
+		}
+
+		answer, err := svc.GetAnswer(uint64(answerID))
+		if err != nil {
+			log.Error("failed to get Answer",
+				sl.Err(err),
+			)
+			getQuestionResponseErr(w, transport.ErrFailedToDecodeReqBody.Error())
+			return
+		}
+
+		log.Info("answer getted", slog.Any("title", answer.Text))
+
+		getAnswerResponseOK(w, *answer)
+
+	}
+}
+func NewDeleteAnswerHandler(log *slog.Logger, svc qa.Service, strID string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		const op = "handlers.question.delete"
+		log.With(
+			slog.String("op", op),
+			slog.String("request_id", middleware.GetRequestID(r)),
+		)
+
+		if r.Method != http.MethodDelete {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			log.Error("mehthod not allowed")
+			return
+		}
+
+		answerID, err := strconv.Atoi(strID)
+		if err != nil {
+			log.Error("failde to convert string",
+				sl.Err(err),
+			)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		err = svc.DeleteAnswer(uint64(answerID))
+		if err != nil {
+			log.Error("failed to get Answer",
+				sl.Err(err),
+			)
+			deleteQuestionResponseErr(w, transport.ErrFailedToDecodeReqBody.Error())
+			return
+		}
+
+		log.Info("answer deleted")
+
+		deleteAnswerResponseOK(w)
+
+	}
+}
 
 func addAnswerResponseErr(w http.ResponseWriter, e string) {
 	r := dto.AddAnswerResponse{
@@ -92,6 +165,38 @@ func addAnswerResponseOK(w http.ResponseWriter, id uint64) {
 	r := dto.AddAnswerResponse{
 		ValidationResponse: validators.OK(),
 		ID:                 id,
+	}
+	transport.WriteJSON(w, http.StatusOK, r)
+}
+
+func getAnswerResponseErr(w http.ResponseWriter, e string) {
+	r := dto.AddAnswerResponse{
+		ValidationResponse: validators.Error(e),
+	}
+	transport.WriteJSON(w, http.StatusBadRequest, r)
+}
+
+func getAnswerResponseOK(w http.ResponseWriter, ans qa.Answer) {
+	r := dto.GetAnswerResponse{
+		ValidationResponse: validators.OK(),
+		AnswerResponse: dto.AnswerResponse{
+			Text:      ans.Text,
+			CreatedAt: ans.CreatedAt,
+		},
+	}
+	transport.WriteJSON(w, http.StatusOK, r)
+}
+
+func deleteAnswerResponseErr(w http.ResponseWriter, e string) {
+	r := dto.AddAnswerResponse{
+		ValidationResponse: validators.Error(e),
+	}
+	transport.WriteJSON(w, http.StatusBadRequest, r)
+}
+
+func deleteAnswerResponseOK(w http.ResponseWriter) {
+	r := dto.GetAnswerResponse{
+		ValidationResponse: validators.OK(),
 	}
 	transport.WriteJSON(w, http.StatusOK, r)
 }

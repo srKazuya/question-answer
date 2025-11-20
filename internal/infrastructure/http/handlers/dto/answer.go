@@ -18,3 +18,7 @@ type AddAnswerResponse struct {
 	resp.ValidationResponse
 	ID uint64
 }
+type GetAnswerResponse struct {
+	resp.ValidationResponse
+	AnswerResponse
+}
